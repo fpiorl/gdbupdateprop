@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# usign ./gdbsetprop property 
+# without explicitly providing a value simply
+# unset the property
+
+# check if property exist
+if [ $# -lt 1 ]; then
+    printf "usage: $0 <prop> <value>\n" 1>&2
+    exit 1
+fi
+
+# install termux, bootstrap and do `pkg install gdb` inside it
+gdb_path=/data/data/com.termux/files/usr/bin/gdb
+
+property="$1"
+shift
+value="$*"
+
+# call __system_property_update as init
+${gdb_path} -p 1 \
+    -ex "set unwind-on-signal on"\
+    -ex "set \$prop=\"${property}\""\
+    -ex "set \$value=\"${value}\""\
+    -ex 'set $len=(int) strlen($value)'\
+    -ex 'set $pi=(void *)__system_property_find($prop)'\
+    -ex 'set $ret=(int)__system_property_update($pi, $value, $len)'\
+    -ex 'quit'
